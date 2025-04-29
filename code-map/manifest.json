@@ -1,0 +1,10 @@
+{
+  "name": "代码映射工具",
+  "short_name": "代码映射",
+  "description": "一个帮助用户创建和管理代码映射的工具",
+  "start_url": "/code-map/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4a90e2",
+  "icons": []
+} 

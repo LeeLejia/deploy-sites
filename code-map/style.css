@@ -1,0 +1,743 @@
+/* 在 :root 中定义颜色变量，方便统一管理 */
+:root {
+  --primary-color: #4a6bdf;
+  --primary-hover: #3a5bdf;
+  --danger-color: #df4a4a;
+  --danger-hover: #c43c3c;
+  --success-color: #4adf7d;
+  --success-hover: #3cc468;
+  --background-color: #f5f7fa;
+  --card-background: #ffffff;
+  --text-color: #333333;
+  --border-color: #e0e0e0;
+  --highlight-bg: #f8f9fa;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px 20px;
+  background-color: var(--card-background);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: var(--danger-hover);
+}
+
+.btn-success {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: var(--success-hover);
+}
+
+/* 映射列表容器 */
+.mapping-list-container {
+  background-color: var(--card-background);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  overflow: hidden;
+}
+
+/* 映射列表中的每个项目 */
+.mapping-item {
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  background-color: var(--card-background);
+  transition: box-shadow 0.3s ease;
+}
+
+.mapping-item:hover {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 映射项标题栏 */
+.mapping-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: var(--highlight-bg);
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid transparent;
+  /* 初始时底部边框为透明 */
+}
+
+/* 修改：只有在展开状态下才显示底部边框 */
+.mapping-item.expanded .mapping-header {
+  border-bottom-color: var(--border-color);
+}
+
+.mapping-title {
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mapping-key {
+  color: #777;
+  font-size: 0.9em;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+/* 统一键名项样式 */
+.key-item {
+  display: inline-block;
+  background-color: #f2f8ff;
+  border: 1px solid var(--primary-color);
+  border-radius: 3px;
+  padding: 1px 5px;
+  color: var(--primary-color);
+  font-size: 0.9em;
+}
+
+.required-badge {
+  background-color: var(--primary-color);
+  color: white;
+  font-size: 0.7em;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 6px;
+}
+
+.mapping-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 拖拽手柄 */
+.drag-handle {
+  cursor: grab;
+  color: #888;
+  margin-right: 6px;
+  padding: 2px 4px;
+  transition: all 0.2s;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drag-handle:hover {
+  color: #555;
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: scale(1.1);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* 当前拖拽中的项目 */
+.mapping-item.dragging {
+  border: 2px dashed var(--primary-color);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1000;
+  background-color: rgba(74, 107, 223, 0.05);
+}
+
+/* 拖拽占位符 - 当拖拽项在列表中移动时显示插入位置 */
+.drag-placeholder {
+  height: 3px;
+  background-color: var(--primary-color);
+  margin: 12px 0;
+  border-radius: 3px;
+  animation: pulse 1s infinite alternate;
+  position: relative;
+  box-shadow: 0 0 5px rgba(74, 107, 223, 0.5);
+}
+
+.drag-placeholder::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  height: 10px;
+  width: 10px;
+  background-color: var(--primary-color);
+  border-radius: 50%;
+  top: -3.5px;
+  box-shadow: 0 0 3px rgba(74, 107, 223, 0.5);
+}
+
+.drag-placeholder::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  height: 10px;
+  width: 10px;
+  background-color: var(--primary-color);
+  border-radius: 50%;
+  top: -3.5px;
+  box-shadow: 0 0 3px rgba(74, 107, 223, 0.5);
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0.6;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* 映射内容区域 */
+.mapping-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.mapping-item.expanded .mapping-content {
+  max-height: 2000px;
+  /* 足够大以容纳内容 */
+  padding: 16px;
+}
+
+/* 代码预览容器 */
+.code-preview-container {
+  margin-top: 10px;
+}
+
+/* 代码比较区域 */
+.code-comparison {
+  display: flex;
+  gap: 16px;
+}
+
+.code-column {
+  flex: 1;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.code-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: var(--highlight-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* 语言标记样式 */
+.language-badge {
+  display: inline-block;
+  background-color: var(--primary-color);
+  color: white;
+  font-size: 0.7em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-left: 8px;
+  font-weight: normal;
+  text-transform: uppercase;
+}
+
+.edit-code-btn {
+  padding: 4px 8px;
+  font-size: 0.8em;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.edit-code-btn:hover {
+  background-color: var(--primary-hover);
+}
+
+.code-column-content {
+  padding: 12px;
+  max-height: 400px;
+  overflow: auto;
+}
+
+/* 代码高亮样式覆盖 */
+pre {
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  border-radius: 0;
+  overflow-x: auto;
+}
+
+code {
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* 模态框样式 */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.modal-content {
+  position: relative;
+  width: 90%;
+  max-width: 1000px;
+  margin: 50px auto;
+  background-color: var(--card-background);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-title {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  margin: 0;
+}
+
+.close-modal {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #777;
+  padding: 0;
+}
+
+.close-modal:hover {
+  color: #333;
+}
+
+/* 表单样式 */
+.form-group {
+  margin-bottom: 16px;
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+input[type="text"],
+textarea,
+select,
+.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+input[type="text"]:focus,
+textarea:focus,
+select:focus,
+.form-control:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+textarea,
+textarea.form-control {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* 复选框样式 */
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-wrapper input {
+  margin-right: 8px;
+}
+
+/* 预览样式 */
+.preview-container {
+  background-color: var(--highlight-bg);
+  padding: 20px;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.preview-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.preview-text {
+  white-space: pre-wrap;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.copy-icon {
+  margin-right: 5px;
+  display: inline-block;
+}
+
+.copy-content-btn {
+  transition: all 0.2s;
+}
+
+.copy-content-btn.copied {
+  background-color: var(--success-color);
+}
+
+/* 拖放时的样式 */
+.drag-over {
+  background-color: #f0f4ff;
+  border: 2px dashed var(--primary-color);
+}
+
+/* 导入模态框的标签 */
+.tab-container {
+  display: flex;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tab {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.tab.active {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* 导入操作区域 */
+.import-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* 模态框底部操作区域 */
+.modal-footer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* 错误提示样式 */
+.error-message {
+  color: var(--danger-color);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* 代码编辑模态框 */
+.code-edit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.language-selector {
+  width: 160px;
+  height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: #fff;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.language-selector:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+/* 改进的模态框标题样式 */
+#code-edit-title {
+  color: var(--primary-color);
+  display: flex;
+  align-items: center;
+}
+
+#import-json-data,
+#import-md-data {
+  box-sizing: border-box;
+}
+
+.code-editor {
+  width: 100%;
+  height: 350px;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.code-editor:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 107, 223, 0.2);
+  background-color: #fff;
+}
+
+/* 编辑元数据显示 */
+.edit-metadata {
+  background-color: var(--highlight-bg);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  border-left: 3px solid var(--primary-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.edit-metadata-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.edit-metadata-form .form-group {
+  margin-bottom: 0;
+}
+
+.edit-metadata-form label {
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #555;
+  font-size: 0.95em;
+}
+
+.edit-metadata-form input[type="text"],
+.edit-metadata-form textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: #fff;
+  transition: all 0.2s;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.edit-metadata-form input[type="text"]:focus,
+.edit-metadata-form textarea:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 107, 223, 0.15);
+}
+
+.edit-metadata-form textarea {
+  height: 60px;
+  resize: vertical;
+}
+
+.edit-metadata-form .checkbox-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.edit-metadata-form .checkbox-wrapper label {
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
+.edit-metadata-form .checkbox-wrapper input[type="checkbox"] {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.edit-section {
+  background-color: #fff;
+  border-radius: 6px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.3s ease;
+}
+
+.edit-section:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* 编辑操作按钮区域 */
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .code-comparison {
+    flex-direction: column;
+  }
+
+  .modal-content {
+    width: 95%;
+    padding: 16px;
+  }
+}
+
+/* 提示消息 */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #333;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 2000;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+}

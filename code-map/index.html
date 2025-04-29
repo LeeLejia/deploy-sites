@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="max-age=31536000, immutable">
+  <meta http-equiv="Expires" content="Mon, 31 Dec 2099 23:59:59 GMT">
+  <title>代码映射工具</title>
+  
+  <!-- PWA支持 -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4a90e2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="代码映射工具">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  
+  <!-- 预加载关键CSS资源 -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- 从CDN加载highlight.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+  
+  <!-- 只添加需要的语言 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/php.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/csharp.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/go.min.js"></script>
+  
+  <!-- 添加Service Worker注册 -->
+  <script>
+    // 检查浏览器是否支持Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/code-map/sw.js').then(function(registration) {
+          console.log('ServiceWorker 注册成功: ', registration.scope);
+        }, function(err) {
+          console.log('ServiceWorker 注册失败: ', err);
+        });
+      });
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>代码映射工具</h1>
+      <div class="actions">
+        <button id="add-mapping" class="btn btn-primary">添加映射</button>
+        <button id="preview-md" class="btn btn-primary">预览 Markdown</button>
+        <button id="copy-md" class="btn btn-primary">复制 Markdown</button>
+        <button id="import-data" class="btn btn-primary">导入数据</button>
+        <button id="copy-json" class="btn btn-primary">复制 JSON</button>
+      </div>
+    </div>
+    
+    <div class="mapping-list-container">
+      <div id="mapping-list">
+        <!-- 映射列表将通过 JavaScript 动态渲染 -->
+        <div class="empty-state">加载中...</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 添加/编辑映射模态框 -->
+  <div id="mapping-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">添加映射</h2>
+        <button class="close-modal">&times;</button>
+      </div>
+      <form id="mapping-form">
+        <input type="hidden" id="edit-index">
+        
+        <div class="form-group">
+          <label for="mapping-key">映射键名</label>
+          <input type="text" id="mapping-key" placeholder="可使用半角逗号分割多个键名" required>
+        </div>
+        
+        <div class="form-group">
+          <div class="checkbox-wrapper">
+            <input type="checkbox" id="is-required">
+            <label for="is-required">标记为必需</label>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="description">描述</label>
+          <textarea id="description" placeholder="对这个映射的简要描述..." required></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="source-language">源代码语言</label>
+          <select id="source-language">
+            <option value="php">PHP</option>
+            <option value="javascript">JavaScript</option>
+            <option value="typescript">TypeScript</option>
+            <option value="java">Java</option>
+            <option value="csharp">C#</option>
+            <option value="python">Python</option>
+            <option value="go">Go</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="source-code">源代码</label>
+          <textarea id="source-code" placeholder="输入源代码..." required></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="target-language">目标代码语言</label>
+          <select id="target-language">
+            <option value="typescript">TypeScript</option>
+            <option value="javascript">JavaScript</option>
+            <option value="php">PHP</option>
+            <option value="java">Java</option>
+            <option value="csharp">C#</option>
+            <option value="python">Python</option>
+            <option value="go">Go</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="target-code">目标代码</label>
+          <textarea id="target-code" placeholder="输入目标代码..." required></textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">保存</button>
+      </form>
+    </div>
+  </div>
+  
+  <!-- 预览模态框 -->
+  <div id="preview-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Markdown 预览</h2>
+        <button class="close-modal">&times;</button>
+      </div>
+      <div class="preview-container">
+        <pre id="preview-content"></pre>
+      </div>
+      <div style="margin-top: 20px;">
+        <button id="copy-md-preview" class="btn btn-primary">复制 Markdown</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 导入模态框 -->
+  <div id="import-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="import-title">导入数据</h2>
+        <button class="close-modal">&times;</button>
+      </div>
+      
+      <div class="tab-container">
+        <div class="tab active" data-tab="json">JSON</div>
+        <div class="tab" data-tab="markdown">Markdown</div>
+      </div>
+      
+      <div id="json-tab" class="tab-content active">
+        <div class="form-group">
+          <label for="import-json-data">粘贴 JSON 数据</label>
+          <textarea id="import-json-data" placeholder="在此粘贴 JSON 数据..." rows="10"></textarea>
+        </div>
+      </div>
+      
+      <div id="markdown-tab" class="tab-content">
+        <div class="form-group">
+          <label for="import-md-data">粘贴 Markdown 数据</label>
+          <textarea id="import-md-data" placeholder="在此粘贴 Markdown 数据..." rows="10"></textarea>
+        </div>
+      </div>
+      
+      <button id="confirm-import" class="btn btn-primary">导入</button>
+    </div>
+  </div>
+  
+  <!-- 代码编辑模态框 -->
+  <div id="code-edit-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="code-edit-title">编辑代码</h2>
+        <button class="close-modal">&times;</button>
+      </div>
+      
+      <div class="code-edit-container">
+        <div id="source-edit-section" class="edit-section">
+          <div class="section-header">
+            <label for="source-edit-language">源代码语言:</label>
+            <select id="source-edit-language" class="language-selector">
+              <option value="php">PHP</option>
+              <option value="javascript">JavaScript</option>
+              <option value="typescript">TypeScript</option>
+              <option value="java">Java</option>
+              <option value="csharp">C#</option>
+              <option value="python">Python</option>
+              <option value="go">Go</option>
+            </select>
+          </div>
+          <textarea id="source-edit-content" class="code-editor" placeholder="输入源代码..."></textarea>
+        </div>
+        
+        <div id="target-edit-section" class="edit-section">
+          <div class="section-header">
+            <label for="target-edit-language">目标代码语言:</label>
+            <select id="target-edit-language" class="language-selector">
+              <option value="typescript">TypeScript</option>
+              <option value="javascript">JavaScript</option>
+              <option value="php">PHP</option>
+              <option value="java">Java</option>
+              <option value="csharp">C#</option>
+              <option value="python">Python</option>
+              <option value="go">Go</option>
+            </select>
+          </div>
+          <textarea id="target-edit-content" class="code-editor" placeholder="输入目标代码..."></textarea>
+        </div>
+        
+        <div class="edit-actions">
+          <button id="save-code-edit" class="btn btn-primary">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 添加版本号以确保浏览器使用最新版本且能够长期缓存 -->
+  <script src="script.js?v=1.0.0"></script>
+  
+  <!-- 添加离线提示 -->
+  <div id="offline-message" style="display: none; position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.3);">
+    您现在处于离线模式，但仍可以使用全部功能
+  </div>
+  
+  <script>
+    // 监测在线/离线状态并显示提示
+    window.addEventListener('online', function() {
+      document.getElementById('offline-message').style.display = 'none';
+    });
+    
+    window.addEventListener('offline', function() {
+      document.getElementById('offline-message').style.display = 'block';
+      setTimeout(function() {
+        document.getElementById('offline-message').style.display = 'none';
+      }, 5000);
+    });
+  </script>
+</body>
+</html> 
