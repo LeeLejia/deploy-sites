@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>尧米镜光 - 专业眼镜商城</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+            padding: 20px;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding-top: 30px;
+            min-height: 70px;
+            border-bottom: #77aaff 3px solid;
+        }
+        header a {
+            color: #fff;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 16px;
+        }
+        header ul {
+            padding: 0;
+            margin: 0;
+            list-style: none;
+            float: right;
+        }
+        header li {
+            display: inline;
+            padding: 0 20px 0 20px;
+        }
+        header #branding {
+            float: left;
+        }
+        header #branding h1 {
+            margin: 0;
+        }
+        .showcase {
+            min-height: 400px;
+            background: url('https://images.unsplash.com/photo-1511499767150-a48a237f0083?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZXllZ2xhc3Nlc3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=1400&q=80') no-repeat center center/cover;
+            text-align: center;
+            color: #fff;
+        }
+        .showcase h1 {
+            margin-top: 100px;
+            font-size: 55px;
+            margin-bottom: 10px;
+        }
+        .showcase p {
+            font-size: 20px;
+        }
+        #products {
+            margin-top: 20px;
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .product-item {
+            background: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        .product-item img {
+            max-width: 100%;
+            height: 200px;
+            object-fit: cover;
+            margin-bottom: 10px;
+        }
+        .product-item h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .product-item p {
+            font-size: 15px;
+            color: #777;
+        }
+        .product-item .price {
+            font-size: 18px;
+            color: #e8491d;
+            font-weight: bold;
+        }
+        footer {
+            padding: 20px;
+            margin-top: 20px;
+            color: #fff;
+            background-color: #333;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div id="branding">
+                <h1><span style="color: #77aaff;">尧米</span>镜光</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li class="current"><a href="#">首页</a></li>
+                    <li><a href="#">商品</a></li>
+                    <li><a href="#">关于我们</a></li>
+                    <li><a href="#">联系我们</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="showcase">
+        <div class="container">
+            <h1>探索清晰视界 - 尧米镜光</h1>
+            <p>专业配镜，时尚新款，总有一款适合您</p>
+        </div>
+    </section>
+
+    <section id="products" class="container">
+        <h2>热卖镜款</h2>
+        <div class="product-grid">
+            <div class="product-item">
+                <img src="https://picsum.photos/400/300?random=1" alt="时尚光学镜架">
+                <h3>时尚光学镜架</h3>
+                <p>轻盈TR材质，多种款式可选，适合各种脸型。</p>
+                <p class="price">¥388.00</p>
+            </div>
+            <div class="product-item">
+                <img src="https://picsum.photos/400/300?random=2" alt="经典飞行员太阳镜">
+                <h3>经典飞行员太阳镜</h3>
+                <p>偏光镜片，有效阻挡紫外线，驾驶出游必备。</p>
+                <p class="price">¥499.00</p>
+            </div>
+            <div class="product-item">
+                <img src="https://picsum.photos/400/300?random=3" alt="防蓝光护目镜">
+                <h3>防蓝光护目镜</h3>
+                <p>缓解视疲劳，保护眼睛健康，办公学习优选。</p>
+                <p class="price">¥199.00</p>
+            </div>
+            <div class="product-item">
+                <img src="https://picsum.photos/400/300?random=4" alt="儿童硅胶眼镜框">
+                <h3>儿童硅胶眼镜框</h3>
+                <p>安全无毒材质，轻巧耐用，呵护孩子视力。</p>
+                <p class="price">¥259.00</p>
+            </div>
+             <div class="product-item">
+                <img src="https://picsum.photos/400/300?random=5" alt="专业运动护目镜">
+                <h3>专业运动护目镜</h3>
+                <p>防冲击，视野宽广，适合各种户外运动。</p>
+                <p class="price">¥359.00</p>
+            </div>
+            <div class="product-item">
+                <img src="https://picsum.photos/400/300?random=6" alt="便携折叠老花镜">
+                <h3>便携折叠老花镜</h3>
+                <p>高清树脂镜片，轻便易携，阅读更轻松。</p>
+                <p class="price">¥129.00</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>尧米镜光 &copy; 2024</p>
+    </footer>
+</body>
+</html>
