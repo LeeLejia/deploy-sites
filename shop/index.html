@@ -3,174 +3,300 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>尧米镜光 - 专业眼镜商城</title>
+    <title>明亮视界眼镜店 - 专业配镜服务</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome 图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
         body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
+            font-family: 'Noto Sans SC', sans-serif;
         }
-        .container {
-            width: 80%;
-            margin: auto;
-            overflow: hidden;
-            padding: 20px;
+        .hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1641048927024-0e801784b4f7?ixid=M3w3NjE4ODh8MHwxfHNlYXJjaHw1fHxleWVnbGFzc2VzfGVufDB8fHx8MTc1MjU1MTYzM3ww&ixlib=rb-4.1.0');
+            background-size: cover;
+            background-position: center;
         }
-        header {
-            background: #333;
-            color: #fff;
-            padding-top: 30px;
-            min-height: 70px;
-            border-bottom: #77aaff 3px solid;
-        }
-        header a {
-            color: #fff;
-            text-decoration: none;
-            text-transform: uppercase;
-            font-size: 16px;
-        }
-        header ul {
-            padding: 0;
-            margin: 0;
-            list-style: none;
-            float: right;
-        }
-        header li {
-            display: inline;
-            padding: 0 20px 0 20px;
-        }
-        header #branding {
-            float: left;
-        }
-        header #branding h1 {
-            margin: 0;
-        }
-        .showcase {
-            min-height: 400px;
-            background: url('https://images.unsplash.com/photo-1511499767150-a48a237f0083?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZXllZ2xhc3Nlc3xlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=1400&q=80') no-repeat center center/cover;
-            text-align: center;
-            color: #fff;
-        }
-        .showcase h1 {
-            margin-top: 100px;
-            font-size: 55px;
-            margin-bottom: 10px;
-        }
-        .showcase p {
-            font-size: 20px;
-        }
-        #products {
-            margin-top: 20px;
-        }
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-        .product-item {
-            background: #fff;
-            padding: 20px;
-            border: 1px solid #ddd;
-            text-align: center;
-        }
-        .product-item img {
-            max-width: 100%;
-            height: 200px;
-            object-fit: cover;
-            margin-bottom: 10px;
-        }
-        .product-item h3 {
-            margin-top: 0;
-            color: #333;
-        }
-        .product-item p {
-            font-size: 15px;
-            color: #777;
-        }
-        .product-item .price {
-            font-size: 18px;
-            color: #e8491d;
-            font-weight: bold;
-        }
-        footer {
-            padding: 20px;
-            margin-top: 20px;
-            color: #fff;
-            background-color: #333;
-            text-align: center;
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
-<body>
-    <header>
-        <div class="container">
-            <div id="branding">
-                <h1><span style="color: #77aaff;">尧米</span>镜光</h1>
+<body class="bg-gray-50">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-md py-4 sticky top-0 z-50">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <i class="fas fa-glasses text-2xl text-blue-600 mr-2"></i>
+                <span class="text-xl font-bold text-gray-800">尧米镜光</span>
             </div>
-            <nav>
-                <ul>
-                    <li class="current"><a href="#">首页</a></li>
-                    <li><a href="#">商品</a></li>
-                    <li><a href="#">关于我们</a></li>
-                    <li><a href="#">联系我们</a></li>
-                </ul>
-            </nav>
+            
+            <div class="hidden md:flex space-x-8">
+                <a href="#" class="text-blue-600 font-medium">首页</a>
+                <a href="#products" class="text-gray-600 hover:text-blue-600">产品</a>
+                <a href="#services" class="text-gray-600 hover:text-blue-600">服务</a>
+                <a href="#about" class="text-gray-600 hover:text-blue-600">关于我们</a>
+                <a href="#contact" class="text-gray-600 hover:text-blue-600">联系我们</a>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full transition duration-300">
+                    预约验光
+                </button>
+                <button class="md:hidden text-gray-600">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
         </div>
-    </header>
+    </nav>
 
-    <section class="showcase">
-        <div class="container">
-            <h1>探索清晰视界 - 尧米镜光</h1>
-            <p>专业配镜，时尚新款，总有一款适合您</p>
-        </div>
-    </section>
-
-    <section id="products" class="container">
-        <h2>热卖镜款</h2>
-        <div class="product-grid">
-            <div class="product-item">
-                <img src="https://picsum.photos/400/300?random=1" alt="时尚光学镜架">
-                <h3>时尚光学镜架</h3>
-                <p>轻盈TR材质，多种款式可选，适合各种脸型。</p>
-                <p class="price">¥388.00</p>
-            </div>
-            <div class="product-item">
-                <img src="https://picsum.photos/400/300?random=2" alt="经典飞行员太阳镜">
-                <h3>经典飞行员太阳镜</h3>
-                <p>偏光镜片，有效阻挡紫外线，驾驶出游必备。</p>
-                <p class="price">¥499.00</p>
-            </div>
-            <div class="product-item">
-                <img src="https://picsum.photos/400/300?random=3" alt="防蓝光护目镜">
-                <h3>防蓝光护目镜</h3>
-                <p>缓解视疲劳，保护眼睛健康，办公学习优选。</p>
-                <p class="price">¥199.00</p>
-            </div>
-            <div class="product-item">
-                <img src="https://picsum.photos/400/300?random=4" alt="儿童硅胶眼镜框">
-                <h3>儿童硅胶眼镜框</h3>
-                <p>安全无毒材质，轻巧耐用，呵护孩子视力。</p>
-                <p class="price">¥259.00</p>
-            </div>
-             <div class="product-item">
-                <img src="https://picsum.photos/400/300?random=5" alt="专业运动护目镜">
-                <h3>专业运动护目镜</h3>
-                <p>防冲击，视野宽广，适合各种户外运动。</p>
-                <p class="price">¥359.00</p>
-            </div>
-            <div class="product-item">
-                <img src="https://picsum.photos/400/300?random=6" alt="便携折叠老花镜">
-                <h3>便携折叠老花镜</h3>
-                <p>高清树脂镜片，轻便易携，阅读更轻松。</p>
-                <p class="price">¥129.00</p>
+    <!-- 英雄区域 -->
+    <section class="hero text-white py-24">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">发现清晰世界</h1>
+            <p class="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">专业验光配镜，为您提供最适合的视觉解决方案</p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full text-lg font-medium transition duration-300">
+                    浏览产品
+                </button>
+                <button class="bg-white hover:bg-gray-100 text-blue-600 px-8 py-3 rounded-full text-lg font-medium transition duration-300">
+                    预约服务
+                </button>
             </div>
         </div>
     </section>
 
-    <footer>
-        <p>尧米镜光 &copy; 2024</p>
+    <!-- 产品展示区 -->
+    <section id="products" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">精选眼镜系列</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">我们提供多种款式和材质的眼镜，满足不同场合和需求</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- 产品卡片1 -->
+                <div class="product-card bg-gray-50 rounded-xl overflow-hidden shadow-lg transition duration-300">
+                    <img src="https://images.unsplash.com/photo-1589176449149-71f7ea77ec25?ixid=M3w3NjE4ODh8MHwxfHNlYXJjaHwxfHxleWVnbGFzc2VzfGVufDB8fHx8MTc1MjU1MTYzM3ww&ixlib=rb-4.1.0" alt="时尚金属框眼镜" class="w-full h-64 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">时尚金属框系列</h3>
+                        <p class="text-gray-600 mb-4">轻盈舒适，适合日常佩戴，多种颜色可选</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-blue-600 font-bold text-lg">¥899起</span>
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm transition duration-300">
+                                查看详情
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 产品卡片2 -->
+                <div class="product-card bg-gray-50 rounded-xl overflow-hidden shadow-lg transition duration-300">
+                    <img src="https://images.unsplash.com/photo-1721020693392-e447ac5f52ee?ixid=M3w3NjE4ODh8MHwxfHNlYXJjaHw0fHxleWVnbGFzc2VzfGVufDB8fHx8MTc1MjU1MTYzM3ww&ixlib=rb-4.1.0" alt="经典板材眼镜" class="w-full h-64 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">经典板材系列</h3>
+                        <p class="text-gray-600 mb-4">经典设计，经久耐用，商务休闲两相宜</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-blue-600 font-bold text-lg">¥799起</span>
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm transition duration-300">
+                                查看详情
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 产品卡片3 -->
+                <div class="product-card bg-gray-50 rounded-xl overflow-hidden shadow-lg transition duration-300">
+                    <img src="https://images.unsplash.com/photo-1722303165074-acba5cd2f3cd?ixid=M3w3NjE4ODh8MHwxfHNlYXJjaHwxMHx8ZXllZ2xhc3Nlc3xlbnwwfHx8fDE3NTI1NTE2MzN8MA&ixlib=rb-4.1.0" alt="复古圆框眼镜" class="w-full h-64 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">复古圆框系列</h3>
+                        <p class="text-gray-600 mb-4">文艺复古，彰显个性，多种镜框颜色可选</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-blue-600 font-bold text-lg">¥759起</span>
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm transition duration-300">
+                                查看详情
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12">
+                <button class="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-3 rounded-full font-medium transition duration-300">
+                    浏览更多产品
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 特色服务区 -->
+    <section id="services" class="py-16 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">专业配镜服务</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">我们提供全方位的视力解决方案，确保您获得最佳视觉体验</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-xl shadow-md text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-eye text-2xl text-blue-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">专业验光</h3>
+                    <p class="text-gray-600">使用先进设备进行全方位视力检查，提供精准验光服务</p>
+                </div>
+                
+                <div class="bg-white p-8 rounded-xl shadow-md text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-glasses text-2xl text-blue-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">镜片定制</h3>
+                    <p class="text-gray-600">提供多种镜片选择，包括防蓝光、渐进多焦点等特殊镜片</p>
+                </div>
+                
+                <div class="bg-white p-8 rounded-xl shadow-md text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-tools text-2xl text-blue-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">终身维护</h3>
+                    <p class="text-gray-600">购买产品享受终身免费清洗、调整和基础维修服务</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 客户评价区 -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">客户评价</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">听听我们的客户怎么说</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-gray-50 p-8 rounded-xl">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gray-300 rounded-full mr-4"></div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">张先生</h4>
+                            <div class="flex text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">"配镜服务非常专业，验光师耐心解答我的各种问题，眼镜戴起来非常舒适，看东西清晰多了！"</p>
+                </div>
+                
+                <div class="bg-gray-50 p-8 rounded-xl">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-gray-300 rounded-full mr-4"></div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">李女士</h4>
+                            <div class="flex text-yellow-400">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600">"眼镜款式很多，店员根据我的脸型推荐了最适合的镜框，服务态度超级好，以后配镜就认准这家了！"</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 联系我们 -->
+    <section id="contact" class="py-16 bg-blue-600 text-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4">联系我们</h2>
+                <p class="max-w-2xl mx-auto">有任何问题或需要预约服务，请随时联系我们</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">店铺信息</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-clock mr-3"></i>
+                            <p>营业时间：周一至周日 10:00-22:00</p>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fab fa-qq mr-3"></i>
+                            <p>1436983000</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8">
+                        <h3 class="text-xl font-bold mb-4">关注我们</h3>
+                        <div class="flex space-x-4">
+                            <a href="#" class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center hover:bg-blue-400 transition duration-300">
+                                <i class="fab fa-weixin"></i>
+                            </a>
+                            <a href="#" class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center hover:bg-blue-400 transition duration-300">
+                                <i class="fab fa-weibo"></i>
+                            </a>
+                            <a href="#" class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center hover:bg-blue-400 transition duration-300">
+                                <i class="fab fa-douyin"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-bold mb-4">预约咨询</h3>
+                    <form class="space-y-4">
+                        <div>
+                            <input type="text" placeholder="您的姓名" class="w-full px-4 py-3 rounded-lg bg-blue-500 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                        </div>
+                        <div>
+                            <input type="tel" placeholder="联系电话" class="w-full px-4 py-3 rounded-lg bg-blue-500 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                        </div>
+                        <div>
+                            <textarea placeholder="您的需求" rows="4" class="w-full px-4 py-3 rounded-lg bg-blue-500 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-white text-blue-600 py-3 rounded-lg font-medium hover:bg-gray-100 transition duration-300">
+                            提交预约
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-800 text-gray-400 py-8">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2025 广州市尧米镜光电子科技有限公司. 保留所有权利</p>
+            <p class="mt-2">粤ICP备2025442941号</p>
+        </div>
     </footer>
+
+    <script>
+        // 简单的导航滚动效果
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                if(targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if(targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html>
