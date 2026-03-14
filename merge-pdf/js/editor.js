@@ -11,9 +11,12 @@ const Editor = {
         reject(new Error('TinyMCE 未加载'));
         return;
       }
+      const editorBody = document.querySelector('.editor-body');
+      const editorHeight = editorBody ? editorBody.clientHeight : 600;
+
       tinymce.init({
         selector: '#editorContent',
-        height: '100%',
+        height: editorHeight,
         resize: false,
         branding: false,
         promotion: false,

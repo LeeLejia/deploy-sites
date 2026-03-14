@@ -234,7 +234,7 @@ const App = {
 
   _showProgress({ current, total, fileName, detail, overallProgress }) {
     const panel = document.getElementById('progressPanel');
-    panel.classList.remove('hidden');
+    panel.classList.remove('collapsed');
     document.getElementById('progressTitle').textContent = '文件解析中';
     document.getElementById('progressStats').textContent = `${current} / ${total}`;
     document.getElementById('progressDetail').textContent =
@@ -244,7 +244,7 @@ const App = {
   },
 
   _hideProgress() {
-    document.getElementById('progressPanel').classList.add('hidden');
+    document.getElementById('progressPanel').classList.add('collapsed');
   },
 
   // ===== FILE TREE =====
@@ -475,8 +475,6 @@ const App = {
         const url = URL.createObjectURL(file.blob);
         bodyHtml = `<div class="preview-body"><img src="${url}" /></div>`;
       } else if (file.type === 'pdf') {
-        pdfjsLib.GlobalWorkerOptions.workerSrc =
-          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         const arrayBuffer = await file.blob.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
 

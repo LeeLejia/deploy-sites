@@ -539,10 +539,16 @@ html, body {
   padding: 10px 20px 12px;
   box-shadow: 0 -2px 8px rgba(0,0,0,.06);
   z-index: 200;
-  transition: transform .3s ease;
+  transition: transform .3s ease, opacity .3s ease;
+  transform: translateY(0);
+  opacity: 1;
 }
 
-.progress-panel.hidden { transform: translateY(100%); }
+.progress-panel.collapsed {
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+}
 
 .progress-info {
   display: flex;
@@ -711,6 +717,17 @@ html, body {
 
 /* ===== UTILITIES ===== */
 .hidden { display: none !important; }
+
+/* TinyMCE height fix */
+.editor-body .tox.tox-tinymce {
+  height: 100% !important;
+  border: none !important;
+}
+
+.editor-body {
+  display: flex;
+  flex-direction: column;
+}
 
 /* ===== SCROLLBAR ===== */
 .file-tree::-webkit-scrollbar,

@@ -1,3 +1,8 @@
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
 const Parser = {
   ocrWorker: null,
   _ocrProgressCb: null,
@@ -57,9 +62,6 @@ const Parser = {
 
   async parsePDF(blob, onProgress) {
     const arrayBuffer = await blob.arrayBuffer();
-
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
     const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
     const numPages = pdf.numPages;
@@ -173,8 +175,6 @@ const Parser = {
   async pdfToImages(blob, scale) {
     scale = scale || 1.5;
     const arrayBuffer = await blob.arrayBuffer();
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
     const images = [];
     for (let i = 1; i <= pdf.numPages; i++) {
