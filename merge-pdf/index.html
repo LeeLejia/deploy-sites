@@ -3,469 +3,150 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>多文件合并 PDF</title>
+<title>律师文档助手</title>
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tinymce@6.8.2/tinymce.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #f5f7fa;
-    --card: #fff;
-    --border: #e2e8f0;
-    --primary: #4f6ef7;
-    --primary-hover: #3b5de7;
-    --danger: #ef4444;
-    --danger-hover: #dc2626;
-    --text: #1e293b;
-    --text-secondary: #64748b;
-    --radius: 12px;
-    --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.04);
-  }
-
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    padding: 32px 16px;
-  }
-
-  .container {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-
-  h1 {
-    font-size: 24px;
-    font-weight: 700;
-    text-align: center;
-    margin-bottom: 6px;
-  }
-
-  .subtitle {
-    text-align: center;
-    color: var(--text-secondary);
-    font-size: 14px;
-    margin-bottom: 28px;
-  }
-
-  /* Drop Zone */
-  .drop-zone {
-    background: var(--card);
-    border: 2px dashed var(--border);
-    border-radius: var(--radius);
-    padding: 48px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color .2s, background .2s;
-    position: relative;
-  }
-
-  .drop-zone:hover, .drop-zone.drag-over {
-    border-color: var(--primary);
-    background: #f0f4ff;
-  }
-
-  .drop-zone input { display: none; }
-
-  .drop-icon {
-    font-size: 42px;
-    margin-bottom: 12px;
-    display: block;
-    opacity: .7;
-  }
-
-  .drop-text { font-size: 15px; color: var(--text-secondary); line-height: 1.6; }
-  .drop-text strong { color: var(--primary); }
-  .drop-hint { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
-
-  /* File List */
-  .file-list {
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .file-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 14px;
-    box-shadow: var(--shadow);
-    cursor: grab;
-    transition: box-shadow .15s, transform .15s;
-    user-select: none;
-  }
-
-  .file-item:active { cursor: grabbing; }
-  .file-item.dragging { opacity: .5; transform: scale(.98); }
-  .file-item.drag-target { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(79,110,247,.25); }
-
-  .file-index {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: #eef2ff;
-    color: var(--primary);
-    font-weight: 600;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .file-thumb {
-    width: 44px;
-    height: 44px;
-    border-radius: 6px;
-    object-fit: cover;
-    background: #f1f5f9;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    color: var(--text-secondary);
-    font-weight: 600;
-    overflow: hidden;
-  }
-
-  .file-thumb img { width: 100%; height: 100%; object-fit: cover; }
-
-  .file-info { flex: 1; min-width: 0; }
-  .file-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .file-size { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-
-  .file-actions { display: flex; gap: 4px; flex-shrink: 0; }
-
-  .btn-icon {
-    width: 30px;
-    height: 30px;
-    border: none;
-    border-radius: 6px;
-    background: transparent;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    color: var(--text-secondary);
-    transition: background .15s, color .15s;
-  }
-
-  .btn-icon:hover { background: #f1f5f9; color: var(--text); }
-  .btn-icon.btn-del:hover { background: #fef2f2; color: var(--danger); }
-
-  /* Bottom Bar */
-  .bottom-bar {
-    margin-top: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  .file-count { font-size: 14px; color: var(--text-secondary); }
-  .file-count strong { color: var(--text); }
-
-  .btn-group { display: flex; gap: 10px; }
-
-  .btn {
-    padding: 10px 22px;
-    border: none;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background .15s, transform .1s;
-  }
-
-  .btn:active { transform: scale(.97); }
-
-  .btn-primary {
-    background: var(--primary);
-    color: #fff;
-  }
-
-  .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
-  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
-
-  .btn-outline {
-    background: var(--card);
-    color: var(--danger);
-    border: 1px solid var(--border);
-  }
-
-  .btn-outline:hover { background: #fef2f2; border-color: var(--danger); }
-
-  /* Progress */
-  .progress-wrap {
-    margin-top: 16px;
-    display: none;
-  }
-
-  .progress-wrap.active { display: block; }
-
-  .progress-bar-bg {
-    height: 6px;
-    background: #e2e8f0;
-    border-radius: 3px;
-    overflow: hidden;
-  }
-
-  .progress-bar {
-    height: 100%;
-    background: var(--primary);
-    border-radius: 3px;
-    width: 0%;
-    transition: width .3s;
-  }
-
-  .progress-text {
-    font-size: 13px;
-    color: var(--text-secondary);
-    margin-top: 6px;
-    text-align: center;
-  }
-
-  /* Empty state */
-  .empty-state {
-    text-align: center;
-    padding: 24px;
-    color: var(--text-secondary);
-    font-size: 14px;
-  }
-</style>
 </head>
 <body>
-<div class="container">
-  <h1>多文件合并 PDF</h1>
-  <p class="subtitle">支持 PDF、PNG、JPG 文件，拖拽排序后一键合并</p>
 
-  <div class="drop-zone" id="dropZone">
-    <span class="drop-icon">📄</span>
-    <div class="drop-text">拖拽文件到这里，或 <strong>点击选择文件</strong></div>
-    <div class="drop-hint">支持 PDF / PNG / JPG / JPEG，可多选</div>
-    <input type="file" id="fileInput" multiple>
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <h1 class="header-title">律师文档助手</h1>
+    <span class="header-desc">导入 · 检索 · 合并 · 导出</span>
   </div>
+  <div class="header-actions">
+    <button class="btn btn-primary" id="btnImportDir">
+      <span class="btn-icon-left">📁</span> 导入文件夹
+    </button>
+    <button class="btn btn-primary" id="btnImportFiles">
+      <span class="btn-icon-left">📄</span> 导入文件
+    </button>
+    <button class="btn btn-ghost" id="btnClearAll">清空数据</button>
+  </div>
+</header>
 
-  <div class="file-list" id="fileList"></div>
+<!-- Main layout -->
+<main class="main">
 
-  <div class="bottom-bar" id="bottomBar" style="display:none;">
-    <div class="file-count">已添加 <strong id="fileCount">0</strong> 个文件</div>
-    <div class="btn-group">
-      <button class="btn btn-outline" id="btnClear">清空</button>
-      <button class="btn btn-primary" id="btnMerge">合并为 PDF</button>
+  <!-- Left: File tree -->
+  <aside class="panel panel-files">
+    <div class="panel-header">
+      <h2>文件管理</h2>
+      <span class="badge" id="fileStats">0</span>
     </div>
-  </div>
+    <div class="file-tree" id="fileTree">
+      <div class="empty-hint">
+        <div class="empty-icon">📂</div>
+        <p>点击「导入文件夹」开始使用</p>
+        <p class="empty-sub">支持 PDF / DOCX / PNG / JPG</p>
+      </div>
+    </div>
+  </aside>
 
-  <div class="progress-wrap" id="progressWrap">
-    <div class="progress-bar-bg"><div class="progress-bar" id="progressBar"></div></div>
-    <div class="progress-text" id="progressText">准备中...</div>
+  <!-- Center: Search + Preview -->
+  <section class="panel panel-center">
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="输入关键字搜索文件内容..." />
+      <span class="search-count" id="searchCount"></span>
+    </div>
+    <div class="center-content" id="centerContent">
+      <div class="empty-hint">
+        <div class="empty-icon">🔍</div>
+        <p>输入关键字搜索文件内容</p>
+        <p class="empty-sub">或点击左侧文件进行预览</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Right: Buffer zone -->
+  <aside class="panel panel-buffer">
+    <div class="panel-header">
+      <h2>已选文件</h2>
+      <span class="badge" id="bufferCount">0</span>
+    </div>
+    <div class="buffer-list" id="bufferList">
+      <div class="empty-hint">
+        <div class="empty-icon">📋</div>
+        <p>从搜索结果或文件树中</p>
+        <p>选择文件添加到这里</p>
+      </div>
+    </div>
+    <div class="buffer-actions">
+      <button class="btn btn-secondary" id="btnClearBuffer" disabled>清空列表</button>
+      <button class="btn btn-primary btn-block" id="btnMergeEdit" disabled>
+        合并并编辑
+      </button>
+    </div>
+  </aside>
+
+</main>
+
+<!-- Progress panel -->
+<div class="progress-panel hidden" id="progressPanel">
+  <div class="progress-info">
+    <div class="progress-left">
+      <span class="progress-title" id="progressTitle">文件解析中</span>
+      <span class="progress-detail" id="progressDetail"></span>
+    </div>
+    <span class="progress-stats" id="progressStats">0 / 0</span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill"></div>
   </div>
 </div>
 
-<script>
-const { PDFDocument } = PDFLib;
-
-const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('fileInput');
-const fileList = document.getElementById('fileList');
-const bottomBar = document.getElementById('bottomBar');
-const fileCountEl = document.getElementById('fileCount');
-const btnClear = document.getElementById('btnClear');
-const btnMerge = document.getElementById('btnMerge');
-const progressWrap = document.getElementById('progressWrap');
-const progressBar = document.getElementById('progressBar');
-const progressText = document.getElementById('progressText');
-
-let files = [];
-
-dropZone.addEventListener('click', () => fileInput.click());
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-dropZone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropZone.classList.remove('drag-over');
-  addFiles([...e.dataTransfer.files]);
-});
-fileInput.addEventListener('change', () => { addFiles([...fileInput.files]); fileInput.value = ''; });
-btnClear.addEventListener('click', () => { files = []; render(); });
-btnMerge.addEventListener('click', mergePDF);
-
-function addFiles(newFiles) {
-  const allowed = ['application/pdf', 'image/png', 'image/jpeg'];
-  const valid = newFiles.filter(f => allowed.includes(f.type));
-  if (valid.length < newFiles.length) {
-    alert(`已忽略 ${newFiles.length - valid.length} 个不支持的文件`);
-  }
-  valid.forEach(f => {
-    files.push({ file: f, id: Date.now() + Math.random() });
-  });
-  render();
-}
-
-function formatSize(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / 1048576).toFixed(1) + ' MB';
-}
-
-function typeLabel(type) {
-  if (type === 'application/pdf') return 'PDF';
-  if (type === 'image/png') return 'PNG';
-  if (type === 'image/jpeg') return 'JPG';
-  return '?';
-}
-
-function render() {
-  fileList.innerHTML = '';
-  bottomBar.style.display = files.length ? '' : 'none';
-  fileCountEl.textContent = files.length;
-
-  if (!files.length) return;
-
-  files.forEach((item, idx) => {
-    const el = document.createElement('div');
-    el.className = 'file-item';
-    el.draggable = true;
-    el.dataset.idx = idx;
-
-    const isImage = item.file.type.startsWith('image/');
-    let thumbHTML;
-    if (isImage) {
-      const url = URL.createObjectURL(item.file);
-      thumbHTML = `<div class="file-thumb"><img src="${url}"></div>`;
-    } else {
-      thumbHTML = `<div class="file-thumb">${typeLabel(item.file.type)}</div>`;
-    }
-
-    el.innerHTML = `
-      <div class="file-index">${idx + 1}</div>
-      ${thumbHTML}
-      <div class="file-info">
-        <div class="file-name" title="${item.file.name}">${item.file.name}</div>
-        <div class="file-size">${formatSize(item.file.size)}</div>
+<!-- Editor overlay -->
+<div class="editor-overlay hidden" id="editorOverlay">
+  <div class="editor-container">
+    <div class="editor-header">
+      <h2>文档编辑器</h2>
+      <div class="editor-actions">
+        <button class="btn btn-primary" id="btnExportWord">
+          <span class="btn-icon-left">📝</span> 导出 Word
+        </button>
+        <button class="btn btn-primary" id="btnExportPdf">
+          <span class="btn-icon-left">📕</span> 导出 PDF
+        </button>
+        <button class="btn btn-ghost" id="btnCloseEditor">关闭编辑器</button>
       </div>
-      <div class="file-actions">
-        <button class="btn-icon" data-action="up" title="上移">↑</button>
-        <button class="btn-icon" data-action="down" title="下移">↓</button>
-        <button class="btn-icon btn-del" data-action="del" title="删除">✕</button>
-      </div>`;
+    </div>
+    <div class="editor-body">
+      <textarea id="editorContent"></textarea>
+    </div>
+    <div class="editor-loading hidden" id="editorLoading">
+      <div class="spinner"></div>
+      <p>正在合并文件内容...</p>
+    </div>
+  </div>
+</div>
 
-    el.querySelectorAll('.btn-icon').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        const action = btn.dataset.action;
-        if (action === 'up' && idx > 0) { [files[idx - 1], files[idx]] = [files[idx], files[idx - 1]]; render(); }
-        if (action === 'down' && idx < files.length - 1) { [files[idx], files[idx + 1]] = [files[idx + 1], files[idx]]; render(); }
-        if (action === 'del') { files.splice(idx, 1); render(); }
-      });
-    });
+<!-- Preview modal (for full-screen preview) -->
+<div class="modal-overlay hidden" id="previewModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3 id="previewTitle">文件预览</h3>
+      <button class="btn btn-ghost" id="btnClosePreview">✕</button>
+    </div>
+    <div class="modal-body" id="previewBody"></div>
+  </div>
+</div>
 
-    // Drag & drop reorder
-    el.addEventListener('dragstart', e => {
-      el.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', idx);
-    });
-    el.addEventListener('dragend', () => el.classList.remove('dragging'));
-    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-target'); });
-    el.addEventListener('dragleave', () => el.classList.remove('drag-target'));
-    el.addEventListener('drop', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      el.classList.remove('drag-target');
-      const from = parseInt(e.dataTransfer.getData('text/plain'));
-      const to = idx;
-      if (from === to) return;
-      const [moved] = files.splice(from, 1);
-      files.splice(to, 0, moved);
-      render();
-    });
+<!-- Hidden inputs -->
+<input type="file" id="dirInput" webkitdirectory multiple style="display:none">
+<input type="file" id="filesInput" multiple accept=".pdf,.png,.jpg,.jpeg,.docx" style="display:none">
 
-    fileList.appendChild(el);
-  });
-}
-
-function showProgress(pct, text) {
-  progressWrap.classList.add('active');
-  progressBar.style.width = pct + '%';
-  progressText.textContent = text;
-}
-
-function hideProgress() {
-  progressWrap.classList.remove('active');
-  progressBar.style.width = '0%';
-}
-
-async function readFileAsArrayBuffer(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsArrayBuffer(file);
-  });
-}
-
-async function mergePDF() {
-  if (!files.length) return;
-  btnMerge.disabled = true;
-  showProgress(0, '正在合并...');
-
-  try {
-    const merged = await PDFDocument.create();
-    const total = files.length;
-
-    for (let i = 0; i < total; i++) {
-      const item = files[i];
-      const bytes = await readFileAsArrayBuffer(item.file);
-      const pct = Math.round(((i + 0.5) / total) * 90);
-      showProgress(pct, `处理第 ${i + 1}/${total} 个文件: ${item.file.name}`);
-
-      if (item.file.type === 'application/pdf') {
-        const src = await PDFDocument.load(bytes);
-        const pages = await merged.copyPages(src, src.getPageIndices());
-        pages.forEach(p => merged.addPage(p));
-      } else {
-        let img;
-        if (item.file.type === 'image/png') {
-          img = await merged.embedPng(bytes);
-        } else {
-          img = await merged.embedJpg(bytes);
-        }
-        const { width, height } = img.scale(1);
-        const page = merged.addPage([width, height]);
-        page.drawImage(img, { x: 0, y: 0, width, height });
-      }
-    }
-
-    showProgress(95, '正在生成 PDF...');
-    const pdfBytes = await merged.save();
-    showProgress(100, '完成！');
-
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = '合并文件.pdf';
-    a.click();
-    URL.revokeObjectURL(url);
-
-    setTimeout(hideProgress, 2000);
-  } catch (err) {
-    alert('合并失败: ' + err.message);
-    hideProgress();
-  } finally {
-    btnMerge.disabled = false;
-  }
-}
-</script>
+<script src="js/db.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/search.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
