@@ -534,7 +534,7 @@ html, body {
   position: fixed;
   bottom: 0;
   left: 0;
-  right: 0;
+  right: 300px;
   background: var(--card);
   border-top: 1px solid var(--border);
   padding: 10px 20px 12px;
