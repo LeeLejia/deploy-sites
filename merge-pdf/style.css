@@ -236,6 +236,7 @@ html, body {
 
 .status-pending { color: var(--text-light); }
 .status-parsing { color: var(--warning); animation: pulse 1s infinite; }
+.status-ocr-pending { color: #8b5cf6; }
 .status-done { color: var(--success); }
 .status-error { color: var(--danger); }
 
@@ -846,3 +847,37 @@ html, body {
 
 .tree-file-btn:hover { background: var(--primary-light); color: var(--primary); }
 .tree-file-btn.btn-add-buffer:hover { background: var(--success-light); color: var(--success); }
+
+/* Edited indicator on tree files */
+.tree-file-edited {
+  color: var(--warning);
+  font-size: 12px;
+  flex-shrink: 0;
+  margin-left: 2px;
+}
+
+/* Panel notice */
+.panel-notice {
+  padding: 8px 12px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #92400e;
+  background: #fef3c7;
+  border-bottom: 1px solid #fde68a;
+  flex-shrink: 0;
+}
+
+.panel-notice.hidden { display: none; }
+
+/* Editor dual action groups */
+#editorMergeActions,
+#editorSingleActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#editorMergeActions.hidden,
+#editorSingleActions.hidden {
+  display: none;
+}

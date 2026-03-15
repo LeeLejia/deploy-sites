@@ -2,8 +2,11 @@ const App = {
   files: new Map(),
   buffer: [],
   parseQueue: [],
+  ocrQueue: [],
   isParsing: false,
   activeFileId: null,
+  _editorMode: null,
+  _editingFileId: null,
 
   async init() {
     await DB.init();
@@ -12,7 +15,7 @@ const App = {
     const existing = await DB.getAll();
     for (const f of existing) {
       this.files.set(f.id, f);
-      if (f.status === 'done' && f.text) {
+      if ((f.status === 'done' || f.status === 'ocr_pending') && f.text) {
         SearchEngine.addDocument({
           id: f.id, name: f.name, path: f.path,
           type: f.type, text: f.text
@@ -25,9 +28,18 @@ const App = {
     this._renderBuffer();
     this._updateStats();
 
-    const pending = existing.filter(f => f.status === 'pending' || f.status === 'parsing');
+    const pending = existing.filter(f =>
+      f.status === 'pending' || f.status === 'parsing'
+    );
+    const ocrPending = existing.filter(f => f.status === 'ocr_pending');
+
     if (pending.length > 0) {
       pending.forEach(f => this.parseQueue.push(f.id));
+    }
+    if (ocrPending.length > 0) {
+      ocrPending.forEach(f => this.ocrQueue.push(f.id));
+    }
+    if (this.parseQueue.length > 0 || this.ocrQueue.length > 0) {
       this._processParseQueue();
     }
   },
@@ -53,10 +65,13 @@ const App = {
       SearchEngine.clear();
       this.files.clear();
       this.buffer = [];
+      this.parseQueue = [];
+      this.ocrQueue = [];
       this._renderFileTree();
       this._renderBuffer();
       this._renderCenterEmpty();
       this._updateStats();
+      this._hideNotice();
       this.toast('已清空所有数据', 'info');
     });
 
@@ -83,6 +98,10 @@ const App = {
     $('btnExportWord').addEventListener('click', () => Editor.exportWord());
     $('btnExportPdf').addEventListener('click', () => Editor.exportPdf());
     $('btnCloseEditor').addEventListener('click', () => this._closeEditor());
+
+    $('btnSaveFile').addEventListener('click', () => this._saveFileEdit());
+    $('btnCancelEdit').addEventListener('click', () => this._closeEditor());
+
     $('btnClosePreview').addEventListener('click', () => this._closePreviewModal());
   },
 
@@ -126,6 +145,7 @@ const App = {
         size: file.size,
         blob: file,
         text: '',
+        editedHtml: null,
         status: 'pending',
         addedAt: Date.now()
       };
@@ -164,52 +184,65 @@ const App = {
     return null;
   },
 
-  // ===== PARSE QUEUE =====
+  // ===== PARSE QUEUE (TWO-PHASE) =====
 
   async _processParseQueue() {
-    if (this.parseQueue.length === 0) {
-      this.isParsing = false;
-      this._hideProgress();
-      return;
-    }
-
+    if (this.isParsing) return;
     this.isParsing = true;
-    const total = this.parseQueue.length;
-    let processed = 0;
+
+    this.parseQueue.sort((a, b) => {
+      const fa = this.files.get(a);
+      const fb = this.files.get(b);
+      return Parser.parsePriority(fa?.type) - Parser.parsePriority(fb?.type);
+    });
+
+    const totalFast = this.parseQueue.length;
+    let processedFast = 0;
 
     while (this.parseQueue.length > 0) {
       const id = this.parseQueue.shift();
       const fileData = this.files.get(id);
-      if (!fileData) { processed++; continue; }
+      if (!fileData) { processedFast++; continue; }
 
       fileData.status = 'parsing';
       this.files.set(id, fileData);
       this._updateFileTreeStatus(id, 'parsing');
 
       try {
-        const text = await Parser.parseFile(fileData, (p) => {
+        const result = await Parser.parseFast(fileData, (p) => {
           this._showProgress({
-            current: processed + 1,
-            total: total,
+            phase: 1,
+            current: processedFast + 1,
+            total: totalFast,
+            ocrRemaining: this.ocrQueue.length,
             fileName: fileData.name,
             detail: p.status,
-            overallProgress: (processed + p.progress) / total
+            overallProgress: (processedFast + p.progress) / totalFast
           });
         });
 
-        fileData.text = text;
-        fileData.status = 'done';
+        fileData.text = result.text;
+
+        if (result.needsOCR) {
+          fileData.status = 'ocr_pending';
+          this.ocrQueue.push(id);
+          this._updateFileTreeStatus(id, 'ocr_pending');
+        } else {
+          fileData.status = 'done';
+          this._updateFileTreeStatus(id, 'done');
+        }
+
         this.files.set(id, fileData);
         await DB.save(fileData);
 
-        SearchEngine.addDocument({
-          id: fileData.id, name: fileData.name, path: fileData.path,
-          type: fileData.type, text: text
-        });
-
-        this._updateFileTreeStatus(id, 'done');
+        if (result.text) {
+          SearchEngine.addDocument({
+            id: fileData.id, name: fileData.name, path: fileData.path,
+            type: fileData.type, text: result.text
+          });
+        }
       } catch (err) {
-        console.error('Parse error:', fileData.name, err);
+        console.error('Fast parse error:', fileData.name, err);
         fileData.status = 'error';
         fileData.errorMsg = err.message;
         this.files.set(id, fileData);
@@ -217,12 +250,17 @@ const App = {
         this._updateFileTreeStatus(id, 'error');
       }
 
-      processed++;
+      processedFast++;
+      this._updateStats();
+    }
+
+    if (this.ocrQueue.length > 0) {
+      await this._processOCRQueue();
     }
 
     this.isParsing = false;
     this._showProgress({
-      current: total, total: total,
+      phase: 0,
       detail: '全部解析完成！',
       overallProgress: 1
     });
@@ -230,13 +268,77 @@ const App = {
     this._updateStats();
   },
 
+  async _processOCRQueue() {
+    const totalOCR = this.ocrQueue.length;
+    let processedOCR = 0;
+
+    while (this.ocrQueue.length > 0) {
+      const id = this.ocrQueue.shift();
+      const fileData = this.files.get(id);
+      if (!fileData) { processedOCR++; continue; }
+
+      fileData.status = 'parsing';
+      this.files.set(id, fileData);
+      this._updateFileTreeStatus(id, 'parsing');
+
+      try {
+        const text = await Parser.parseOCR(fileData, (p) => {
+          this._showProgress({
+            phase: 2,
+            current: processedOCR + 1,
+            total: totalOCR,
+            fileName: fileData.name,
+            detail: p.status,
+            overallProgress: (processedOCR + p.progress) / totalOCR
+          });
+        });
+
+        fileData.text = text || fileData.text;
+        fileData.status = 'done';
+        this.files.set(id, fileData);
+        await DB.save(fileData);
+
+        SearchEngine.addDocument({
+          id: fileData.id, name: fileData.name, path: fileData.path,
+          type: fileData.type, text: fileData.text
+        });
+
+        this._updateFileTreeStatus(id, 'done');
+      } catch (err) {
+        console.error('OCR parse error:', fileData.name, err);
+        fileData.status = 'error';
+        fileData.errorMsg = err.message;
+        this.files.set(id, fileData);
+        await DB.save(fileData);
+        this._updateFileTreeStatus(id, 'error');
+      }
+
+      processedOCR++;
+      this._updateStats();
+    }
+  },
+
   // ===== PROGRESS =====
 
-  _showProgress({ current, total, fileName, detail, overallProgress }) {
+  _showProgress({ phase, current, total, ocrRemaining, fileName, detail, overallProgress }) {
     const panel = document.getElementById('progressPanel');
     panel.classList.remove('collapsed');
-    document.getElementById('progressTitle').textContent = '文件解析中';
-    document.getElementById('progressStats').textContent = `${current} / ${total}`;
+
+    let title = '文件解析中';
+    let stats = '';
+    if (phase === 1) {
+      title = '快速解析';
+      stats = `${current} / ${total}`;
+      if (ocrRemaining > 0) stats += ` (${ocrRemaining} 个待OCR)`;
+    } else if (phase === 2) {
+      title = 'OCR 识别';
+      stats = `${current} / ${total}`;
+    } else {
+      stats = '';
+    }
+
+    document.getElementById('progressTitle').textContent = title;
+    document.getElementById('progressStats').textContent = stats;
     document.getElementById('progressDetail').textContent =
       (fileName ? fileName + ' - ' : '') + (detail || '');
     document.getElementById('progressFill').style.width =
@@ -317,10 +419,12 @@ const App = {
 
         const icon = file.type === 'pdf' ? '📕' : file.type === 'docx' ? '📘' : '🖼️';
         const statusHtml = this._statusIcon(file.status);
+        const editedBadge = file.editedHtml ? '<span class="tree-file-edited" title="已编辑（内存中）">✎</span>' : '';
 
         el.innerHTML = `
           <span class="tree-file-icon">${icon}</span>
           <span class="tree-file-name" title="${this._esc(file.name)}">${this._esc(file.name)}</span>
+          ${editedBadge}
           <span class="tree-file-status" data-status-id="${file.id}">${statusHtml}</span>
           <span class="tree-file-actions">
             <button class="tree-file-btn btn-add-buffer" title="添加到已选" data-add-id="${file.id}">+</button>
@@ -354,6 +458,7 @@ const App = {
     switch (status) {
       case 'done': return '<span class="status-done">✓</span>';
       case 'parsing': return '<span class="status-parsing">◉</span>';
+      case 'ocr_pending': return '<span class="status-ocr-pending" title="等待OCR">◔</span>';
       case 'error': return '<span class="status-error">✕</span>';
       default: return '<span class="status-pending">○</span>';
     }
@@ -367,7 +472,25 @@ const App = {
   _updateStats() {
     const total = this.files.size;
     const done = Array.from(this.files.values()).filter(f => f.status === 'done').length;
-    document.getElementById('fileStats').textContent = done === total ? total : `${done}/${total}`;
+    const ocrPending = Array.from(this.files.values()).filter(f => f.status === 'ocr_pending').length;
+    let text = String(total);
+    if (done < total) {
+      text = `${done + ocrPending}/${total}`;
+      if (ocrPending > 0) text += ` (${ocrPending} OCR中)`;
+    }
+    document.getElementById('fileStats').textContent = text;
+  },
+
+  // ===== NOTICE =====
+
+  _showNotice() {
+    const notice = document.getElementById('editNotice');
+    if (notice) notice.classList.remove('hidden');
+  },
+
+  _hideNotice() {
+    const notice = document.getElementById('editNotice');
+    if (notice) notice.classList.add('hidden');
   },
 
   // ===== SEARCH =====
@@ -521,10 +644,14 @@ const App = {
 
   _previewHeader(file, inBuffer) {
     const sizeStr = this._formatSize(file.size);
+    const editedTag = file.editedHtml
+      ? '<span style="color:var(--warning);font-size:11px;margin-left:6px;">(已编辑·内存中)</span>'
+      : '';
     return `
       <div class="preview-header">
-        <h3>${this._esc(file.name)} <span style="font-weight:400;color:var(--text-light);font-size:12px;">(${sizeStr})</span></h3>
+        <h3>${this._esc(file.name)} <span style="font-weight:400;color:var(--text-light);font-size:12px;">(${sizeStr})</span>${editedTag}</h3>
         <div class="preview-header-actions">
+          <button class="btn btn-sm btn-secondary" id="prevEditFile">编辑</button>
           <button class="btn btn-sm ${inBuffer ? 'btn-secondary' : 'btn-primary'}"
                   id="prevAddBuffer" ${inBuffer ? 'disabled' : ''}>
             ${inBuffer ? '已在列表中' : '+ 添加到已选'}
@@ -537,7 +664,7 @@ const App = {
     if (!file.text) return '';
     return `
       <div class="preview-text-section">
-        <h4>提取文本 (${file.status === 'done' ? '已完成' : file.status})</h4>
+        <h4>提取文本 (${file.status === 'done' ? '已完成' : file.status === 'ocr_pending' ? '待OCR补全' : file.status})</h4>
         <div class="preview-text-content">${this._esc(file.text.substring(0, 2000))}${file.text.length > 2000 ? '\n...(更多内容已省略)' : ''}</div>
       </div>`;
   },
@@ -551,6 +678,78 @@ const App = {
         addBtn.disabled = true;
         addBtn.className = 'btn btn-sm btn-secondary';
       });
+    }
+
+    const editBtn = document.getElementById('prevEditFile');
+    if (editBtn) {
+      editBtn.addEventListener('click', () => this._editFile(id));
+    }
+  },
+
+  // ===== FILE EDITING (IN MEMORY) =====
+
+  async _editFile(id) {
+    const file = this.files.get(id);
+    if (!file) return;
+
+    this._setEditorMode('single', id);
+
+    const overlay = document.getElementById('editorOverlay');
+    const loading = document.getElementById('editorLoading');
+    overlay.classList.remove('hidden');
+    loading.classList.remove('hidden');
+    loading.querySelector('p').textContent = '正在加载文件内容...';
+
+    try {
+      await Editor.init();
+
+      if (file.editedHtml) {
+        Editor.setContent(file.editedHtml);
+      } else {
+        await Editor.loadFiles([file], (msg) => {
+          loading.querySelector('p').textContent = msg;
+        });
+      }
+
+      loading.classList.add('hidden');
+    } catch (err) {
+      loading.querySelector('p').textContent = '加载失败: ' + err.message;
+      console.error('Edit file error:', err);
+    }
+  },
+
+  _saveFileEdit() {
+    const id = this._editingFileId;
+    if (!id) return;
+    const file = this.files.get(id);
+    if (!file) return;
+
+    file.editedHtml = Editor.getContent();
+    this.files.set(id, file);
+
+    this._closeEditor();
+    this._renderFileTree();
+    this._showNotice();
+    this.toast('已保存修改（仅在当前会话有效，刷新页面后将丢失）', 'success');
+
+    if (this.activeFileId === id) {
+      this._previewFile(id);
+    }
+  },
+
+  _setEditorMode(mode, fileId) {
+    this._editorMode = mode;
+    this._editingFileId = fileId || null;
+
+    const mergeActions = document.getElementById('editorMergeActions');
+    const singleActions = document.getElementById('editorSingleActions');
+
+    if (mode === 'single') {
+      mergeActions.classList.add('hidden');
+      singleActions.classList.remove('hidden');
+    } else {
+      mergeActions.classList.remove('hidden');
+      singleActions.classList.add('hidden');
     }
   },
 
@@ -597,6 +796,7 @@ const App = {
       if (!file) return;
 
       const icon = file.type === 'pdf' ? '📕' : file.type === 'docx' ? '📘' : '🖼️';
+      const editedMark = file.editedHtml ? ' <span style="color:var(--warning);font-size:10px;">✎</span>' : '';
       const el = document.createElement('div');
       el.className = 'buffer-item';
       el.draggable = true;
@@ -605,7 +805,7 @@ const App = {
       el.innerHTML = `
         <span class="buffer-item-index">${idx + 1}</span>
         <span class="buffer-item-icon">${icon}</span>
-        <span class="buffer-item-name" title="${this._esc(file.path)}">${this._esc(file.name)}</span>
+        <span class="buffer-item-name" title="${this._esc(file.path)}">${this._esc(file.name)}${editedMark}</span>
         <button class="buffer-item-remove" data-remove-id="${id}" title="移除">✕</button>`;
 
       el.querySelector('[data-remove-id]').addEventListener('click', (e) => {
@@ -639,15 +839,18 @@ const App = {
     });
   },
 
-  // ===== EDITOR =====
+  // ===== EDITOR (MERGE) =====
 
   async _openEditor() {
     if (this.buffer.length === 0) return;
+
+    this._setEditorMode('merge', null);
 
     const overlay = document.getElementById('editorOverlay');
     const loading = document.getElementById('editorLoading');
     overlay.classList.remove('hidden');
     loading.classList.remove('hidden');
+    loading.querySelector('p').textContent = '正在合并文件内容...';
 
     try {
       await Editor.init();
@@ -670,6 +873,8 @@ const App = {
   _closeEditor() {
     document.getElementById('editorOverlay').classList.add('hidden');
     Editor.destroy();
+    this._editorMode = null;
+    this._editingFileId = null;
   },
 
   // ===== PREVIEW MODAL =====
