@@ -85,10 +85,14 @@ const Editor = {
       const file = files[i];
       if (onProgress) onProgress(`正在处理 ${file.name} (${i + 1}/${total})`);
 
-      html += `<div class="file-divider">📄 ${this._escapeHtml(file.name)}</div>`;
+      if (total > 1) {
+        html += `<div class="file-divider">📄 ${this._escapeHtml(file.name)}</div>`;
+      }
 
       try {
-        if (file.type === 'docx') {
+        if (file.editedHtml) {
+          html += file.editedHtml;
+        } else if (file.type === 'docx') {
           const docxHtml = await Parser.docxToHtml(file.blob);
           html += docxHtml;
         } else if (file.type === 'image') {
@@ -104,7 +108,9 @@ const Editor = {
         html += `<p style="color:red;">⚠ 加载失败: ${this._escapeHtml(err.message)}</p>`;
       }
 
-      html += '<hr />';
+      if (total > 1) {
+        html += '<hr />';
+      }
     }
 
     this.setContent(html);

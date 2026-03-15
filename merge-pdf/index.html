@@ -41,6 +41,9 @@
       <h2>文件管理</h2>
       <span class="badge" id="fileStats">0</span>
     </div>
+    <div class="panel-notice hidden" id="editNotice">
+      ⚠️ 文件编辑仅保存在浏览器内存中，刷新页面后修改将丢失
+    </div>
     <div class="file-tree" id="fileTree">
       <div class="empty-hint">
         <div class="empty-icon">📂</div>
@@ -109,13 +112,19 @@
     <div class="editor-header">
       <h2>文档编辑器</h2>
       <div class="editor-actions">
-        <button class="btn btn-primary" id="btnExportWord">
-          <span class="btn-icon-left">📝</span> 导出 Word
-        </button>
-        <button class="btn btn-primary" id="btnExportPdf">
-          <span class="btn-icon-left">📕</span> 导出 PDF
-        </button>
-        <button class="btn btn-ghost" id="btnCloseEditor">关闭编辑器</button>
+        <div id="editorMergeActions">
+          <button class="btn btn-primary" id="btnExportWord">
+            <span class="btn-icon-left">📝</span> 导出 Word
+          </button>
+          <button class="btn btn-primary" id="btnExportPdf">
+            <span class="btn-icon-left">📕</span> 导出 PDF
+          </button>
+          <button class="btn btn-ghost" id="btnCloseEditor">关闭编辑器</button>
+        </div>
+        <div id="editorSingleActions" class="hidden">
+          <button class="btn btn-primary" id="btnSaveFile">保存修改</button>
+          <button class="btn btn-ghost" id="btnCancelEdit">取消</button>
+        </div>
       </div>
     </div>
     <div class="editor-body">

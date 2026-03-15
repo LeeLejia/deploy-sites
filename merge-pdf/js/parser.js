@@ -39,16 +39,43 @@ const Parser = {
     }
   },
 
-  async parseFile(fileData, onProgress) {
-    const { blob, type, name } = fileData;
+  parsePriority(type) {
+    return { docx: 0, pdf: 1, image: 2 }[type] ?? 9;
+  },
+
+  async parseFast(fileData, onProgress) {
+    const { blob, type } = fileData;
 
     if (type === 'docx') {
-      return await this.parseDOCX(blob, onProgress);
-    } else if (type === 'pdf') {
-      return await this.parsePDF(blob, onProgress);
-    } else if (type === 'image') {
-      return await this.parseImage(blob, onProgress);
+      const text = await this.parseDOCX(blob, onProgress);
+      return { text, needsOCR: false };
     }
+
+    if (type === 'pdf') {
+      return await this.parsePDFTextOnly(blob, onProgress);
+    }
+
+    if (type === 'image') {
+      if (onProgress) onProgress({ status: '等待 OCR 队列...', progress: 0 });
+      return { text: '', needsOCR: true };
+    }
+
+    return { text: '', needsOCR: false };
+  },
+
+  async parseOCR(fileData, onProgress) {
+    const { blob, type } = fileData;
+
+    if (type === 'image') {
+      const text = await this.parseImage(blob, onProgress);
+      return text;
+    }
+
+    if (type === 'pdf') {
+      const text = await this.parsePDFOCR(blob, onProgress);
+      return text;
+    }
+
     return '';
   },
 
@@ -60,9 +87,8 @@ const Parser = {
     return result.value || '';
   },
 
-  async parsePDF(blob, onProgress) {
+  async parsePDFTextOnly(blob, onProgress) {
     const arrayBuffer = await blob.arrayBuffer();
-
     const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
     const numPages = pdf.numPages;
     let fullText = '';
@@ -72,7 +98,7 @@ const Parser = {
       if (onProgress) {
         onProgress({
           status: `提取PDF文本 (${i}/${numPages})`,
-          progress: (i / numPages) * 0.5
+          progress: i / numPages
         });
       }
       const page = await pdf.getPage(i);
@@ -82,52 +108,47 @@ const Parser = {
       fullText += pageText + '\n';
     }
 
-    const avgCharsPerPage = charCount / numPages;
+    const avgCharsPerPage = numPages > 0 ? charCount / numPages : 0;
     const isScanned = avgCharsPerPage < 20;
 
-    if (isScanned && numPages > 0) {
-      if (onProgress) {
-        onProgress({
-          status: '检测到扫描件，启动OCR识别...',
-          progress: 0.5
-        });
-      }
+    return { text: fullText.trim(), needsOCR: isScanned };
+  },
 
-      await this.initOCR();
-      fullText = '';
+  async parsePDFOCR(blob, onProgress) {
+    const arrayBuffer = await blob.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+    const numPages = pdf.numPages;
+    let fullText = '';
 
-      for (let i = 1; i <= numPages; i++) {
-        if (onProgress) {
-          onProgress({
-            status: `OCR识别中 (${i}/${numPages})`,
-            progress: 0.5 + ((i - 1) / numPages) * 0.5
-          });
-        }
-
-        this._ocrProgressCb = (m) => {
-          if (m.status === 'recognizing text' && onProgress) {
-            onProgress({
-              status: `OCR识别 第${i}/${numPages}页 ${Math.round(m.progress * 100)}%`,
-              progress: 0.5 + ((i - 1 + m.progress) / numPages) * 0.5
-            });
-          }
-        };
-
-        const canvas = await this._renderPdfPage(pdf, i, 2.0);
-        const { data: { text } } = await this.ocrWorker.recognize(canvas);
-        fullText += text + '\n';
-      }
-
-      this._ocrProgressCb = null;
+    if (onProgress) {
+      onProgress({ status: '初始化 OCR 引擎...', progress: 0 });
     }
 
+    await this.initOCR();
+
+    for (let i = 1; i <= numPages; i++) {
+      this._ocrProgressCb = (m) => {
+        if (m.status === 'recognizing text' && onProgress) {
+          onProgress({
+            status: `OCR识别 第${i}/${numPages}页 ${Math.round(m.progress * 100)}%`,
+            progress: ((i - 1 + m.progress) / numPages)
+          });
+        }
+      };
+
+      const canvas = await this._renderPdfPage(pdf, i, 2.0);
+      const { data: { text } } = await this.ocrWorker.recognize(canvas);
+      fullText += text + '\n';
+    }
+
+    this._ocrProgressCb = null;
     if (onProgress) onProgress({ status: '完成', progress: 1 });
     return fullText.trim();
   },
 
   async parseImage(blob, onProgress) {
     if (onProgress) {
-      onProgress({ status: '初始化OCR引擎...', progress: 0 });
+      onProgress({ status: '初始化 OCR 引擎...', progress: 0 });
     }
 
     await this.initOCR();
