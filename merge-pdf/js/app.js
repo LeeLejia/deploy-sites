@@ -4,6 +4,7 @@ const App = {
   parseQueue: [],
   ocrQueue: [],
   isParsing: false,
+  _parseCancelled: false,
   activeFileId: null,
   _editorMode: null,
   _editingFileId: null,
@@ -61,16 +62,19 @@ const App = {
 
     $('btnClearAll').addEventListener('click', async () => {
       if (!confirm('确定清空所有导入的数据？此操作不可恢复。')) return;
+      this._parseCancelled = true;
+      this.parseQueue = [];
+      this.ocrQueue = [];
+      this.isParsing = false;
       await DB.clear();
       SearchEngine.clear();
       this.files.clear();
       this.buffer = [];
-      this.parseQueue = [];
-      this.ocrQueue = [];
       this._renderFileTree();
       this._renderBuffer();
       this._renderCenterEmpty();
       this._updateStats();
+      this._hideProgress();
       this._hideNotice();
       this.toast('已清空所有数据', 'info');
     });
@@ -189,6 +193,7 @@ const App = {
   async _processParseQueue() {
     if (this.isParsing) return;
     this.isParsing = true;
+    this._parseCancelled = false;
 
     this.parseQueue.sort((a, b) => {
       const fa = this.files.get(a);
@@ -200,6 +205,8 @@ const App = {
     let processedFast = 0;
 
     while (this.parseQueue.length > 0) {
+      if (this._parseCancelled) break;
+
       const id = this.parseQueue.shift();
       const fileData = this.files.get(id);
       if (!fileData) { processedFast++; continue; }
@@ -220,6 +227,8 @@ const App = {
             overallProgress: (processedFast + p.progress) / totalFast
           });
         });
+
+        if (this._parseCancelled) break;
 
         fileData.text = result.text;
 
@@ -242,6 +251,7 @@ const App = {
           });
         }
       } catch (err) {
+        if (this._parseCancelled) break;
         console.error('Fast parse error:', fileData.name, err);
         fileData.status = 'error';
         fileData.errorMsg = err.message;
@@ -254,17 +264,19 @@ const App = {
       this._updateStats();
     }
 
-    if (this.ocrQueue.length > 0) {
+    if (!this._parseCancelled && this.ocrQueue.length > 0) {
       await this._processOCRQueue();
     }
 
     this.isParsing = false;
-    this._showProgress({
-      phase: 0,
-      detail: '全部解析完成！',
-      overallProgress: 1
-    });
-    setTimeout(() => this._hideProgress(), 2500);
+    if (!this._parseCancelled) {
+      this._showProgress({
+        phase: 0,
+        detail: '全部解析完成！',
+        overallProgress: 1
+      });
+      setTimeout(() => this._hideProgress(), 2500);
+    }
     this._updateStats();
   },
 
@@ -273,6 +285,8 @@ const App = {
     let processedOCR = 0;
 
     while (this.ocrQueue.length > 0) {
+      if (this._parseCancelled) break;
+
       const id = this.ocrQueue.shift();
       const fileData = this.files.get(id);
       if (!fileData) { processedOCR++; continue; }
@@ -293,6 +307,8 @@ const App = {
           });
         });
 
+        if (this._parseCancelled) break;
+
         fileData.text = text || fileData.text;
         fileData.status = 'done';
         this.files.set(id, fileData);
@@ -305,6 +321,7 @@ const App = {
 
         this._updateFileTreeStatus(id, 'done');
       } catch (err) {
+        if (this._parseCancelled) break;
         console.error('OCR parse error:', fileData.name, err);
         fileData.status = 'error';
         fileData.errorMsg = err.message;
@@ -428,6 +445,7 @@ const App = {
           <span class="tree-file-status" data-status-id="${file.id}">${statusHtml}</span>
           <span class="tree-file-actions">
             <button class="tree-file-btn btn-add-buffer" title="添加到已选" data-add-id="${file.id}">+</button>
+            <button class="tree-file-btn btn-del-file" title="删除" data-del-id="${file.id}">✕</button>
           </span>`;
 
         el.addEventListener('click', (e) => {
@@ -438,6 +456,11 @@ const App = {
         el.querySelector('[data-add-id]').addEventListener('click', (e) => {
           e.stopPropagation();
           this.addToBuffer(file.id);
+        });
+
+        el.querySelector('[data-del-id]').addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.deleteFile(file.id);
         });
 
         parent.appendChild(el);
@@ -754,6 +777,29 @@ const App = {
   },
 
   // ===== BUFFER =====
+
+  async deleteFile(id) {
+    const file = this.files.get(id);
+    if (!file) return;
+
+    this.files.delete(id);
+    await DB.remove(id);
+    SearchEngine.removeDocument(id);
+
+    this.buffer = this.buffer.filter(x => x !== id);
+    this.parseQueue = this.parseQueue.filter(x => x !== id);
+    this.ocrQueue = this.ocrQueue.filter(x => x !== id);
+
+    if (this.activeFileId === id) {
+      this.activeFileId = null;
+      this._renderCenterEmpty();
+    }
+
+    this._renderFileTree();
+    this._renderBuffer();
+    this._updateStats();
+    this.toast(`已删除 ${file.name}`, 'info');
+  },
 
   addToBuffer(id) {
     if (this.buffer.includes(id)) {

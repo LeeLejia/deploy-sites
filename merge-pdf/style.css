@@ -847,6 +847,7 @@ html, body {
 
 .tree-file-btn:hover { background: var(--primary-light); color: var(--primary); }
 .tree-file-btn.btn-add-buffer:hover { background: var(--success-light); color: var(--success); }
+.tree-file-btn.btn-del-file:hover { background: var(--danger-light); color: var(--danger); }
 
 /* Edited indicator on tree files */
 .tree-file-edited {
