@@ -85,10 +85,6 @@ const Editor = {
       const file = files[i];
       if (onProgress) onProgress(`正在处理 ${file.name} (${i + 1}/${total})`);
 
-      if (total > 1) {
-        html += `<div class="file-divider">📄 ${this._escapeHtml(file.name)}</div>`;
-      }
-
       try {
         if (file.editedHtml) {
           html += file.editedHtml;
@@ -108,9 +104,6 @@ const Editor = {
         html += `<p style="color:red;">⚠ 加载失败: ${this._escapeHtml(err.message)}</p>`;
       }
 
-      if (total > 1) {
-        html += '<hr />';
-      }
     }
 
     this.setContent(html);
